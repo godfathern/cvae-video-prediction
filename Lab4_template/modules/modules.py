@@ -62,7 +62,10 @@ class Label_Encoder(nn.Sequential):
     def forward(self, image):
         return super().forward(image)
     
-    
+
+# This is the encoder
+# Input of this encoder : true current frame and the pose
+# Output : bell curve for z : as μ and logvar.
 class Gaussian_Predictor(nn.Sequential):
     def __init__(self, in_chans=48, out_chans=96):
         super(Gaussian_Predictor, self).__init__(
@@ -77,7 +80,15 @@ class Gaussian_Predictor(nn.Sequential):
         
     def reparameterize(self, mu, logvar):
         # TODO
-        raise NotImplementedError
+        # DL-5 : slide 38- reparameterization
+        # Formula : 
+        #       z = B(X)ϵ + µ(X)
+        # =>    z = σ·ε + μ
+        #Turn the log variance into standard deviation (squareroot of variance) : σ
+        std = torch.exp(0.5*logvar) 
+        # Draw the random noise : ε
+        eps = torch.randn_like(std)
+        return std*eps + mu
 
     def forward(self, img, label):
         feature = torch.cat([img, label], dim=1)
