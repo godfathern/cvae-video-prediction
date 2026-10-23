@@ -138,7 +138,7 @@ The posterior predictor is discarded. Starting from the single observed frame *x
 ### Installation
 
 ```bash
-git clone https://github.com/<your-username>/cvae-video-prediction.git
+git clone https://github.com/godfathern/cvae-video-prediction.git
 cd cvae-video-prediction
 python -m venv .venv && source .venv/bin/activate
 pip install -r Lab4_template/requirements.txt
