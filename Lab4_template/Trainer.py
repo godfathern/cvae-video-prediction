@@ -139,16 +139,49 @@ class VAE_Model(nn.Module):
     
     def training_one_step(self, img, label, adapt_TeacherForcing):
         # TODO
+        # ---------------------------------------------------------------
+        # Shape of img and label: (B, T, C, H, W) = (2, 16, 3, 32, 64)
+        #
+        #   axis 0  B = 2   which clip in the batch (DataLoader stacks clips here)
+        #   axis 1  T = 16  which frame in the clip  -> this is TIME
+        #   axis 2  C = 3   colour channel: red, green, blue
+        #   axis 3  H = 32  pixel row
+        #   axis 4  W = 64  pixel column
+        T = img.shape[1]
+        mse_total = 0.0
+        kl_total = 0.0
+        prev_frame = img[:, 0]
         
-        
-        
-        
-        
-        
-        
-        
-        
-        raise NotImplementedError
+        for t in range(1, T):
+            target = img[:, t]
+            pose = img[:,t]
+
+            # Lab 4 - instructions : figure 4a
+            # Right box : the encoder peeks at the answer
+            target_feat = self.frame_transformation(target)
+            pose_feat = self.label_transformation(pose)
+            z, mu, logvar = self.Gaussian_Predictor(target_feat, pose_feat)
+            
+            # Left box: the decoder draws the frame
+            prev_feat = self.frame_transformation(prev_frame)
+            fused = self.Decoder_Fusion(prev_feat, pose_feat, z)
+            pred = self.Generator(fused)
+
+            # The two losses
+            mse_total += self.mse_criterion(pred, target)
+            kl_total += kl_criterion(mu, logvar, self.batch_size)
+
+            # Teacher forcing: what the next step builds on
+            prev_frame = target if adapt_TeacherForcing else pred
+
+        beta = self.kl_annealing.get_beta()
+        loss = mse_total + beta * kl_total
+
+        self.optim.zero_grad()
+        loss.backward()
+        self.optimizer_step()
+        return loss
+                
     
     def val_one_step(self, img, label):
         # TODO
