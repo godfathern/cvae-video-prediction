@@ -1,0 +1,67 @@
+# ---------------------------------------------------------------------------
+# Dataset (5+ GB of PNG frames) — download separately, never commit
+# ---------------------------------------------------------------------------
+Lab4_dataset/
+data/
+datasets/
+*.zip
+*.tar
+*.tar.gz
+
+# ---------------------------------------------------------------------------
+# Training artifacts: checkpoints, generated frames / GIFs, logs, submissions
+# ---------------------------------------------------------------------------
+checkpoints/
+ckpt/
+runs/
+logs/
+outputs/
+results/
+*.ckpt
+*.pt
+*.pth
+*.gif
+*.png
+*.jpg
+*.jpeg
+submission*.csv
+events.out.tfevents.*
+
+# Keep README figures under docs/ even though images are ignored above
+!docs/**/*.png
+!docs/**/*.gif
+!docs/**/*.jpg
+
+# ---------------------------------------------------------------------------
+# Course handout (copyrighted course material)
+# ---------------------------------------------------------------------------
+*.pdf
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.python-version
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---------------------------------------------------------------------------
+# OS / editor
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
