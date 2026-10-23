@@ -32,23 +32,39 @@ def kl_criterion(mu, logvar, batch_size):
   KLD /= batch_size  
   return KLD
 
-
+# Loss = MSE + β × KL
 class kl_annealing():
     def __init__(self, args, current_epoch=0):
         # TODO
-        raise NotImplementedError
+        self.current_epoch = current_epoch
+        if args.kl_anneal_type == 'Cyclical':
+            self.schedule = self.frange_cycle_linear(args.num_epoch, n_cycle=args.kl_anneal_cycle, ratio=args.kl_anneal_ratio)
+        elif args.kl_anneal_type == 'Monotonic':
+            self.schedule = self.frange_cycle_linear(args.num_epoch, n_cycle=1, ratio=args.kl_anneal_ratio)
+        else:  # 'None'
+            self.schedule = np.ones(args.num_epoch)
         
     def update(self):
         # TODO
-        raise NotImplementedError
+        self.current_epoch += 1
     
     def get_beta(self):
         # TODO
-        raise NotImplementedError
-
+        epoch = min(self.current_epoch, len(self.schedule) - 1 )
+        return float(self.schedule[epoch])
+    
     def frange_cycle_linear(self, n_iter, start=0.0, stop=1.0,  n_cycle=1, ratio=1):
         # TODO
-        raise NotImplementedError
+        L = np.ones(n_iter) * stop
+        period = n_iter / n_cycle
+        step = (stop - start) / (period * ratio)
+        for c in range(n_cycle):
+            v, i = start, 0
+            while v <= stop and int(i + c * period) < n_iter:
+                L[int(i + c * period)] = v
+                v += step
+                i += 1
+        return L
         
 
 class VAE_Model(nn.Module):
@@ -123,6 +139,15 @@ class VAE_Model(nn.Module):
     
     def training_one_step(self, img, label, adapt_TeacherForcing):
         # TODO
+        
+        
+        
+        
+        
+        
+        
+        
+        
         raise NotImplementedError
     
     def val_one_step(self, img, label):
