@@ -44,7 +44,7 @@ class Dataset_Dance(torchData):
         self.img_folder = []
         self.label_folder = []
         
-        data_num = len(glob('./Demo_Test/*'))
+        data_num = len(glob(os.path.join(root, 'test/test_img/*')))
         for i in range(data_num):
             self.img_folder.append(sorted(glob(os.path.join(root , f'test/test_img/{i}/*')), key=get_key))
             self.label_folder.append(sorted(glob(os.path.join(root , f'test/test_label/{i}/*')), key=get_key))
@@ -93,6 +93,7 @@ class Test_model(VAE_Model):
             
     @torch.no_grad()
     def eval(self):
+        nn.Module.eval(self)        # this method shadows nn.Module.eval; use BatchNorm running stats
         val_loader = self.val_dataloader()
         pred_seq_list = []
         for idx, (img, label) in enumerate(tqdm(val_loader, ncols=80)):
@@ -122,9 +123,21 @@ class Test_model(VAE_Model):
         decoded_frame_list = [img[0].cpu()]
         label_list = []
 
-        # TODO
-        raise NotImplementedError
-            
+        # Lab 4 - instructions : section 3.3 / figure 5 (inference)
+        # img[0] is the only real frame. For t = 1..629 build on the previous
+        # prediction, with z drawn from the prior N(0, I) (no encoder here).
+        prev_frame = img[0]
+        label_list.append(label[0].cpu())
+        pose_feats = self.label_transformation(label[:, 0])   # all 630 poses in one batched call
+        for t in range(1, label.shape[0]):
+            pose_feat = pose_feats[t:t+1]
+            prev_feat = self.frame_transformation(prev_frame)
+            z = torch.randn(prev_frame.shape[0], self.args.N_dim, self.args.frame_H, self.args.frame_W,
+                            device=prev_frame.device)
+            pred = self.Generator(self.Decoder_Fusion(prev_feat, pose_feat, z)).clamp(0.0, 1.0)
+            decoded_frame_list.append(pred.cpu())
+            label_list.append(label[t].cpu())
+            prev_frame = pred
         
         # Please do not modify this part, it is used for visulization
         generated_frame = stack(decoded_frame_list).permute(1, 0, 2, 3, 4)
@@ -162,7 +175,7 @@ class Test_model(VAE_Model):
 
     def load_checkpoint(self):
         if self.args.ckpt_path != None:
-            checkpoint = torch.load(self.args.ckpt_path)
+            checkpoint = torch.load(self.args.ckpt_path, map_location=self.args.device)
             self.load_state_dict(checkpoint['state_dict'], strict=True) 
 
 
@@ -182,7 +195,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=True)
     parser.add_argument('--batch_size',    type=int,    default=2)
     parser.add_argument('--lr',            type=float,  default=0.001,     help="initial learning rate")
-    parser.add_argument('--device',        type=str, choices=["cuda", "cpu"], default="cuda")
+    parser.add_argument('--device',        type=str, choices=["cuda", "cpu", "mps"], default="cuda")
     parser.add_argument('--optim',         type=str, choices=["Adam", "AdamW"], default="Adam")
     parser.add_argument('--gpu',           type=int, default=1)
     parser.add_argument('--no_sanity',     action='store_true')
@@ -218,7 +231,7 @@ if __name__ == '__main__':
     parser.add_argument('--fast_train_epoch',   type=int, default=5,        help="Number of epoch to use fast train mode")
     
     # Kl annealing stratedy arguments
-    parser.add_argument('--kl_anneal_type',     type=str, default='Cyclical',       help="")
+    parser.add_argument('--kl_anneal_type',     type=str, default='Cyclical', choices=['Cyclical', 'Monotonic', 'None'], help="KL annealing schedule")
     parser.add_argument('--kl_anneal_cycle',    type=int, default=10,               help="")
     parser.add_argument('--kl_anneal_ratio',    type=float, default=1,              help="")
     
