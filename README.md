@@ -120,7 +120,7 @@ The posterior predictor is discarded. Starting from the single observed frame *x
 
 | Strategy | β over training | Effect |
 |---|---|---|
-| Cyclical | Ramps 0 → 1 linearly, resets every `kl_anneal_cycle` epochs | Repeatedly re-opens the latent bottleneck, mitigating KL vanishing |
+| Cyclical | Ramps 0 → 1 linearly, repeated `kl_anneal_cycle` times over training | Repeatedly re-opens the latent bottleneck, mitigating KL vanishing |
 | Monotonic | Ramps 0 → 1 once, then stays at 1 | Standard warm-up |
 | None | β = 1 throughout | Baseline, prone to posterior collapse |
 
@@ -205,7 +205,7 @@ This writes `pred_seq{i}.gif` for each of the 5 test sequences and `submission.c
 | `--val_vi_len` | 630 | Frames in the validation sequence |
 | `--frame_H` / `--frame_W` | 32 / 64 | Input resolution |
 | `--kl_anneal_type` | `Cyclical` | `Cyclical` · `Monotonic` · `None` |
-| `--kl_anneal_cycle` | 10 | Epochs per annealing cycle |
+| `--kl_anneal_cycle` | 10 | Number of annealing cycles over the whole run |
 | `--kl_anneal_ratio` | 1 | Fraction of each cycle spent ramping β |
 | `--tfr` | 1.0 | Initial teacher-forcing ratio |
 | `--tfr_sde` | 10 | Epoch at which `tfr` starts decaying |
